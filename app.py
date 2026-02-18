@@ -1,37 +1,47 @@
 import streamlit as st
-import numpy as np
 import tensorflow as tf
-from PIL import Image
-import cv2
+from tensorflow.keras.preprocessing import image
+import numpy as np
 
-# Load Model
-@st.cache_resource
-def load_model():
-    model = tf.keras.models.load_model("mma_movement_model.h5")
-    return model
+# Load the trained model (local file in repo)
+model = tf.keras.models.load_model('fighting_movement_model.h5')
 
-model = load_model()
+# Class indices (must match your training)
+class_indices = {'punch': 0, 'kick': 1, 'block': 2}
 
-class_names = ['Punch', 'Kick', 'Block', 'Elbow', 'Knee']
+# Reverse mapping
+class_labels = {v: k for k, v in class_indices.items()}
 
-st.set_page_config(page_title="MMA Movement Predictor")
+# Prediction function
+def predict_fighting_movement(img):
+    img_array = image.img_to_array(img) / 255.0
+    img_array = np.expand_dims(img_array, axis=0)
 
-st.title("🥋 MMA Movement Prediction")
+    predictions = model.predict(img_array)
+    predicted_class = np.argmax(predictions[0])
 
-uploaded_file = st.file_uploader("Upload Fighter Image", type=["jpg", "png", "jpeg"])
+    return class_labels[predicted_class]
+
+
+# Background styling
+st.markdown("""
+<style>
+.stApp {
+    background-color: #ADD8E6;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# App UI
+st.image("A-removebg-preview.png", width=400)
+st.title("🥊 Fighting Movement Predictor")
+
+uploaded_file = st.file_uploader("Upload Fighting Image", type=["jpg", "png"])
 
 if uploaded_file is not None:
-    image = Image.open(uploaded_file)
-    st.image(image, caption="Uploaded Image")
+    img = image.load_img(uploaded_file, target_size=(150, 150))
+    st.image(img, caption='Uploaded Image', use_column_width=True)
 
-    img = np.array(image)
-    img = cv2.resize(img, (224, 224))
-    img = img / 255.0
-    img = np.expand_dims(img, axis=0)
+    movement = predict_fighting_movement(img)
+    st.success(f"Predicted Fighting Movement: {movement}")
 
-    prediction = model.predict(img)
-    predicted_class = class_names[np.argmax(prediction)]
-    confidence = np.max(prediction)
-
-    st.success(f"Predicted Movement: {predicted_class}")
-    st.info(f"Confidence: {confidence:.2f}")
