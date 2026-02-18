@@ -34,7 +34,7 @@ st.markdown("""
 
 # App UI
 st.image("A-removebg-preview.png", width=400)
-st.title("🥊 Fighting Movement Predictor")
+st.title(" Fighting Movement Predictor")
 
 uploaded_file = st.file_uploader("Upload Fighting Image", type=["jpg", "png"])
 
